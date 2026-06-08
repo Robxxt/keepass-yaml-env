@@ -1,46 +1,50 @@
-import os
-import sys
-import yaml
-import getpass
 import argparse
+import getpass
+import os
 import subprocess
+import sys
+
+import yaml
 from pykeepass import PyKeePass
 from pykeepass.exceptions import CredentialsError
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Inject KeePass secrets into a command's environment."
     )
     parser.add_argument(
-        "-f", "--file", 
-        default="secrets.yaml", 
-        help="Path to the YAML configuration file."
+        "-f",
+        "--file",
+        default="secrets.yaml",
+        help="Path to the YAML configuration file.",
     )
     parser.add_argument(
-        "command", 
-        nargs=argparse.REMAINDER, 
-        help="The command to run (e.g., -- python main.py)"
+        "command",
+        nargs=argparse.REMAINDER,
+        help="The command to run (e.g.,-- python main.py)",
     )
-    
     args = parser.parse_args()
-    
     command = args.command
     if command and command[0] == "--":
         command = command[1:]
-        
+
     if not command:
-        print("Error: No command provided. Usage: keepass-yaml-env -f secrets.yaml -- <command>")
+        print(
+            "Error: No command provided. Usage: keepass-yaml-env -f "
+            "secrets.yaml -- <command>"
+        )
         sys.exit(1)
 
     if not os.path.exists(args.file):
         print(f"Error: Configuration file not found: {args.file}")
         sys.exit(1)
 
-    with open(args.file, 'r') as file:
+    with open(args.file, "r") as file:
         config = yaml.safe_load(file)
 
-    kdbx_path = config.get('keepass_db')
-    secrets_mapping = config.get('secrets', [])
+    kdbx_path = config.get("keepass_db")
+    secrets_mapping = config.get("secrets", [])
 
     if not kdbx_path:
         print("Error: YAML file must contain a 'keepass_db' path.")
@@ -58,12 +62,12 @@ def main():
         print(f"Error: Failed to open KeePass database: {e}")
         sys.exit(1)
 
-    injected_env = os.environ.copy() 
-    
+    injected_env = os.environ.copy()
+
     for secret in secrets_mapping:
-        entry_path = secret.get('entry_path')
-        attribute = secret.get('attribute', 'Password').lower()
-        env_var = secret.get('env_var')
+        entry_path = secret.get("entry_path")
+        attribute = secret.get("attribute", "Password").lower()
+        env_var = secret.get("env_var")
 
         if not all([entry_path, env_var]):
             continue
@@ -78,14 +82,14 @@ def main():
 
     try:
         result = subprocess.run(command, env=injected_env)
-        
         sys.exit(result.returncode)
-        
+
     except FileNotFoundError:
         print(f"Error: Could not find command '{command[0]}'.")
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(130)
+
 
 if __name__ == "__main__":
     main()

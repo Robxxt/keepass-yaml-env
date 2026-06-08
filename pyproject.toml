@@ -12,7 +12,9 @@ pykeepass = "^4.0.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-flake8="^7.3.0"
+black = "^26.5.1"
+ruff = "^0.15.16"
+pre-commit = "^4.6.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -20,3 +22,17 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 keepass-yaml-env = "keepass_yaml_env.cli:main"
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # errors, pyflakes, imports
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["your_package_name"]
