@@ -6,12 +6,13 @@ authors = ["robxxt <personal.robert@protonmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-pyyaml = "^6.0.1"
-pykeepass = "^4.0.7"
+python = "3.10"
+pyyaml = "6.0.1"
+pykeepass = "4.0.7"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
+pytest = "8.0.0"
+flake8="7.3.0"
 
 [build-system]
 requires = ["poetry-core"]
