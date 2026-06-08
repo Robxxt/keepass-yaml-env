@@ -2,8 +2,9 @@ name: "CI"
 run-name: "Build by - Author: ${{ github.actor }}"
 
 on:
+    pull_request:
     push:
-        branches: 
+        branches:
             - main
 
 jobs:
