@@ -32,5 +32,11 @@ jobs:
       - name: Build project
         run: poetry build
 
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1 # Official PyPA action
+    #   [TEST PYPI DISTRIBUTION]
+      - name: Publish package distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+    #   [PUBLIC DISTRIBUTION]
+    #   - name: Publish package distributions to PyPI
+    #     uses: pypa/gh-action-pypi-publish@release/v1
