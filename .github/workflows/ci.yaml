@@ -1,4 +1,4 @@
-name: "CI - Author: ${{ github.actor }}"
+name: "CI"
 
 on:
     push:
@@ -6,6 +6,7 @@ on:
             - main
 jobs:
     static_code_analysis:
+        name: "Build by - Author: ${{ github.actor }}"
         runs-on: ubuntu
         steps:
             - name: Checkout Repository
