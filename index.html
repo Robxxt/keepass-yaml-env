@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>keepass-yaml-env Documentation</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #24292e;
+            --link-color: #0366d6;
+            --border-color: #eaecef;
+            --code-bg: #f6f8fa;
+            --blockquote-color: #6a737d;
+            --blockquote-border: #dfe2e5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        h1 { font-size: 2em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; margin-top: 40px; }
+        h3 { font-size: 1.25em; }
+
+        p, blockquote, ul, ol, dl, table, pre {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        blockquote {
+            padding: 0 1em;
+            color: var(--blockquote-color);
+            border-left: 0.25em solid var(--blockquote-border);
+            margin: 0 0 16px 0;
+        }
+
+        code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(27,31,35,0.05);
+            border-radius: 3px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+        }
+
+        pre code {
+            display: inline;
+            max-width: auto;
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            line-height: inherit;
+            word-wrap: normal;
+            background-color: transparent;
+            border: 0;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        table th, table td {
+            padding: 6px 13px;
+            border: 1px solid var(--border-color);
+        }
+
+        table tr:nth-child(2n) {
+            background-color: var(--code-bg);
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            height: 0.25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: var(--border-color);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>keepass-yaml-env 🔐</h1>
+
+    <blockquote>
+        <strong>Secure, local secret management for developers.</strong><br>
+        Load KeePass secrets directly into your development environment at runtime—no plain-text <code>.env</code> files required.
+    </blockquote>
+
+    <p><code>keepass-yaml-env</code> is a CLI wrapper that bridges your KeePass (<code>.kdbx</code>) database and your application. It securely unlocks your database, extracts the secrets you specify in a YAML configuration file, and injects them directly into your program's environment variables in-memory.</p>
+
+    <p>When your program closes, the secrets vanish. They are never written to your hard drive.</p>
+
+    <hr>
+
+    <h2>✨ Features</h2>
+    <ul>
+        <li><strong>Zero Plain-Text Secrets:</strong> Completely replaces local <code>.env</code> files.</li>
+        <li><strong>Language Agnostic:</strong> Works with Python, Node.js, Go, Rust, or any CLI tool.</li>
+        <li><strong>In-Memory Injection:</strong> Secrets are passed to the child process and destroyed upon exit.</li>
+        <li><strong>Path-Based Resolution:</strong> Prevent collisions by fetching secrets via exact KeePass folder paths.</li>
+        <li><strong>CI/CD Ready:</strong> Easy to integrate into automated testing pipelines.</li>
+    </ul>
+
+    <hr>
+
+    <h2>📦 Installation</h2>
+    <p>The recommended way to install <code>keepass-yaml-env</code> globally is using <code>pipx</code>. This installs the tool in an isolated environment but makes the command available everywhere on your system.</p>
+
+<pre><code class="language-bash">pipx install keepass-yaml-env</code></pre>
+
+    <p><em>(Alternatively, you can use <code>uv tool install keepass-yaml-env</code> or standard <code>pip install keepass-yaml-env</code> depending on your workflow).</em></p>
+
+    <hr>
+
+    <h2>🚀 Quick Start (Simple Example)</h2>
+    <p>Let's say you have a Python script (<code>app.py</code>) that needs a database password, but you don't want to hardcode it or put it in a <code>.env</code> file.</p>
+
+    <h3>1. Set up your KeePassXC Database</h3>
+    <ol>
+        <li>Open KeePassXC and create a database saved at <code>~/Documents/my_vault.kdbx</code>.</li>
+        <li>Inside the database, create an entry with the title <strong><code>local_postgres</code></strong>.</li>
+        <li>Set the <strong>Username</strong> to <code>admin</code> and the <strong>Password</strong> to <code>supersecret</code>.</li>
+    </ol>
+
+    <h3>2. Create your mapping file (<code>secrets.yaml</code>)</h3>
+    <p>Create a file named <code>secrets.yaml</code> in your project folder. This tells the tool where to find the database and which secrets map to which environment variables.</p>
+
+<pre><code class="language-yaml">keepass_db: "~/Documents/my_vault.kdbx"
+
+secrets:
+  - entry_path: "local_postgres"
+    attribute: "Username"
+    env_var: "DB_USER"
+    
+  - entry_path: "local_postgres"
+    attribute: "Password"
+    env_var: "DB_PASSWORD"</code></pre>
+
+    <h3>3. Run your application</h3>
+    <p>Instead of running <code>python app.py</code>, wrap your command with <code>keepass-yaml-env</code>:</p>
+
+<pre><code class="language-bash">keepass-yaml-env -f secrets.yaml -- python app.py</code></pre>
+
+    <p><strong>What happens next?</strong></p>
+    <ol>
+        <li>You will be prompted securely in the terminal for your KeePass Master Password.</li>
+        <li>The tool unlocks the database and finds the <code>local_postgres</code> entry.</li>
+        <li>It spawns <code>python app.py</code> with <code>DB_USER</code> and <code>DB_PASSWORD</code> injected into the environment.</li>
+    </ol>
+
+    <hr>
+
+    <h2>⚙️ Configuration Reference</h2>
+    <p>The <code>secrets.yaml</code> file supports the following structure:</p>
+
+    <h3>Root Level</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>keepass_db</code></td>
+                <td><code>string</code></td>
+                <td><strong>(Required)</strong> The file path to your <code>.kdbx</code> database. Supports <code>~</code> for home directory expansion.</td>
+            </tr>
+            <tr>
+                <td><code>secrets</code></td>
+                <td><code>list</code></td>
+                <td><strong>(Required)</strong> A list of secret mapping objects.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Secret Mapping Object</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>entry_path</code></td>
+                <td><code>string</code></td>
+                <td><strong>(Required)</strong> The path to the entry in KeePass. For nested entries, use slashes (e.g., <code>Root/Development/DB_Credentials</code>).</td>
+            </tr>
+            <tr>
+                <td><code>attribute</code></td>
+                <td><code>string</code></td>
+                <td><strong>(Required)</strong> The field to extract. Valid options: <code>Password</code>, <code>Username</code>, <code>URL</code>, <code>Notes</code>.</td>
+            </tr>
+            <tr>
+                <td><code>env_var</code></td>
+                <td><code>string</code></td>
+                <td><strong>(Required)</strong> The exact name of the environment variable that will be injected into your application.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>💡 Usage Examples</h2>
+    <p>Because <code>keepass-yaml-env</code> acts as a POSIX-compliant wrapper, you can use it to run literally any terminal command.</p>
+
+    <p><strong>Run a Node.js server:</strong></p>
+<pre><code class="language-bash">keepass-yaml-env -f dev-secrets.yaml -- npm run start</code></pre>
+
+    <p><strong>Run a Docker container with local secrets:</strong></p>
+<pre><code class="language-bash">keepass-yaml-env -f secrets.yaml -- docker compose up</code></pre>
+
+    <p><strong>Just print the secrets to the terminal (for debugging):</strong></p>
+<pre><code class="language-bash">keepass-yaml-env -f secrets.yaml -- env | grep DB_</code></pre>
+
+    <p><em>(Note: The <code>--</code> double-dash is highly recommended. It explicitly tells the wrapper to stop parsing arguments so it doesn't accidentally consume flags meant for your application).</em></p>
+
+    <hr>
+
+    <h2>🛠️ Development &amp; Contributing</h2>
+    <p>If you want to contribute to the project or run the test suite locally, we use modern Python tooling via <code>pyproject.toml</code>.</p>
+
+    <ol>
+        <li>Clone the repository.</li>
+        <li>Install dependencies using <a href="https://python-poetry.org/" target="_blank">Poetry</a> or <a href="https://github.com/astral-sh/uv" target="_blank">uv</a>.
+<pre><code class="language-bash">poetry install --with dev</code></pre>
+        </li>
+        <li>Run the isolated test suite:
+<pre><code class="language-bash">poetry run pytest -v</code></pre>
+        </li>
+    </ol>
+
+</body>
+</html>
