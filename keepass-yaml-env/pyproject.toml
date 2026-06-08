@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "keepass-yaml-env"
+version = "0.1.0"
+description = "Load KeePass secrets directly into your development environment at runtime—no plain-text .env files required."
+authors = ["robxxt <personal.robert@protonmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyyaml = "^6.0.1"
+pykeepass = "^4.0.7"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+keepass-yaml-env = "keepass_yaml_env.cli:main"
