@@ -22,10 +22,11 @@ def main():
     parser.add_argument(
         "command",
         nargs=argparse.REMAINDER,
-        help="The command to run (e.g.,-- python main.py)",
+        help="The command to run (e.g., -- echo $VAR1 $VAR2)",
     )
     args = parser.parse_args()
     command = args.command
+
     if command and command[0] == "--":
         command = command[1:]
 
@@ -80,12 +81,20 @@ def main():
             if secret_value:
                 injected_env[env_var] = str(secret_value)
 
+    # --- NEW BEHAVIOR START ---
+    # Update the parent environment temporarily so expandvars can access the new secrets
+    os.environ.update(injected_env)
+
+    # Expand environment variables (e.g., $VAR1) directly in the command arguments
+    expanded_command = [os.path.expandvars(arg) for arg in command]
+    # --- NEW BEHAVIOR END ---
+
     try:
-        result = subprocess.run(command, env=injected_env)
+        result = subprocess.run(expanded_command, env=injected_env)
         sys.exit(result.returncode)
 
     except FileNotFoundError:
-        print(f"Error: Could not find command '{command[0]}'.")
+        print(f"Error: Could not find command '{expanded_command[0]}'.")
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(130)
