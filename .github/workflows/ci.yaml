@@ -13,7 +13,6 @@ on:
           - pyproject.toml
           - ".github/**"
 
-
 jobs:
     static_code_analysis:
         runs-on: ubuntu-latest

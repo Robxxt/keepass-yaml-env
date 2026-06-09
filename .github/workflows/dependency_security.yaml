@@ -1,0 +1,26 @@
+name: Dependency Security Scan
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+    schedule:
+        # check every Monday 00:00 for newly discovered CVEs
+        - cron: '0 0 * * 1'
+jobs:
+    scan:
+        name: Pip Audit
+        runs-on: ubuntu-latest
+
+        steps:
+        # 1. Check out the repository source code
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+        # 2. Run the pip-audit security scan
+            - name: Run pip-audit
+              uses: pypa/gh-action-pip-audit@v1.1.0
+              with:
+                inputs: pyproject.toml poetry.lock
