@@ -15,13 +15,25 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-        # 1. Check out the repository source code
             - name: Checkout code
               uses: actions/checkout@v4
 
-        # 2. Run the pip-audit security scan
+            - name: Cache requirements.txt
+              id: cache-reqs
+              uses: actions/cache@v4
+              with:
+                path: requirements.txt
+                key: ${{ runner.os }}-poetry-export-${{ hashFiles('**/poetry.lock') }}
+            
+            - name: Install poetry
+              if: steps.cache-reqs.outputs.cache-hit != 'true'
+              run: pipx install poetry
+            
+            - name: Export poetry dependencies into requirements.txt
+              if: steps.cache-reqs.outputs.cache-hit != 'true'
+              run: poetry export -f requirements.txt --output requirements.txt --without-hashes
+
             - name: Run pip-audit
               uses: pypa/gh-action-pip-audit@v1.1.0
               with:
-                inputs: pyproject.toml
-                internal-be-careful-requirements-format: poetry
+                inputs: requirements.txt

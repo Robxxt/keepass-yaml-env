@@ -11,7 +11,7 @@ pyyaml = "^6.0.1"
 pykeepass = "^4.0.7"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
+pytest = "9.0.3"
 black = "^26.5.1"
 ruff = "^0.15.16"
 pre-commit = "^4.6.0"
