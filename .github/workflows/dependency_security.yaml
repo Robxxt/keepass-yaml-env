@@ -27,7 +27,9 @@ jobs:
             
             - name: Install poetry
               if: steps.cache-reqs.outputs.cache-hit != 'true'
-              run: pipx install poetry
+              run: |
+                pipx install poetry
+                pipx install poetry-plugin-export
             
             - name: Export poetry dependencies into requirements.txt
               if: steps.cache-reqs.outputs.cache-hit != 'true'
