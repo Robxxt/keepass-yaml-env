@@ -25,11 +25,11 @@ jobs:
                 path: requirements.txt
                 key: ${{ runner.os }}-poetry-export-${{ hashFiles('**/poetry.lock') }}
             
-            - name: Install poetry
+            - name: Install poetry and poetry-export
               if: steps.cache-reqs.outputs.cache-hit != 'true'
               run: |
                 pipx install poetry
-                pipx install poetry-plugin-export
+                poetry add poetry-plugin-export
             
             - name: Export poetry dependencies into requirements.txt
               if: steps.cache-reqs.outputs.cache-hit != 'true'
