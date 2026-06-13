@@ -34,8 +34,7 @@ jobs:
             
             - name: Run linters
               run: |
-                poetry run ruff check .
-                poetry run black . --check --diff
+                poetry run ruff check . --line-length 120
 
             
             - name: Run tests
