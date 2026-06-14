@@ -41,7 +41,6 @@ jobs:
             
             - name: Run Bandit SAST
               run: |
-                pipx install bandit
                 bandit -r keepass_yaml_env/ -ll
 
     
