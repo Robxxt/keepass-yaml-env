@@ -203,11 +203,11 @@ class TestExecutionAndRegex:
     def test_unexpanded_vars_aborts_execution(self, isolated_env):
         """EDGE CASE: Script should abort if variables fail to expand."""
 
-        # We ask for $MISSING_VAR which is not in our isolated keepass DB
         test_args = [
             "keepass-yaml-env",
             "-f",
             isolated_env["yaml_path"],
+            "--allow-unsafe-args",
             "--",
             "echo",
             "$TEST_DB_USER",  # Exists

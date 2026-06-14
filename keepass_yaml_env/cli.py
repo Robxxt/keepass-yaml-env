@@ -88,6 +88,11 @@ def main() -> None:
         help="Path to the YAML configuration file.",
     )
     parser.add_argument(
+        "--allow-unsafe-args",
+        action="store_true",
+        help="DANGER: Expand environment variables directly into command arguments (may expose secrets to ps aux).",
+    )
+    parser.add_argument(
         "command",
         nargs=argparse.REMAINDER,
         help="The command to run (e.g., -- echo $VAR1 $VAR2)",
@@ -99,8 +104,9 @@ def main() -> None:
         command = command[1:]
 
     if not command:
+        print("[-] Error: No command provided.", file=sys.stderr)
         print(
-            "[-] Error: No command provided. Usage: keepass-yaml-env -f " "secrets.yaml -- <command>",
+            "Usage: keepass-yaml-env -f" "secrets.yaml [--allow-unsafe-args] -- <command>",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -147,40 +153,49 @@ def main() -> None:
                 file=sys.stderr,
             )
 
-    # Update the parent environment temporarily so expandvars can access the new secrets.
-    os.environ.update(injected_env)
-
-    # Expand environment variables (e.g., $VAR1) directly in the command arguments
-    expanded_command = [os.path.expandvars(arg) for arg in command]
-
-    # Check for unexpanded environment variables (e.g., $VAR or ${VAR})
-    # This regex captures standard bash-style variable names
-    unexpanded_pattern = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)|\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
-    missing_vars = set()
-
-    for arg in expanded_command:
-        for match in unexpanded_pattern.findall(arg):
-            # match is a tuple like ('VAR', '') or ('', 'VAR') based on the regex group
-            var_name = match[0] or match[1]
-            missing_vars.add(var_name)
-
-    if missing_vars:
-        missing_list = ", ".join(sorted(missing_vars))
+    # 4. Command Argument Expansion (Opt-In Security Risk)
+    if args.allow_unsafe_args:
         print(
-            f"[-] Error: Command execution aborted.\n"
-            "    The following variables were not found in KeePass"
-            f": {missing_list}",
+            "\n[WARNING] --allow-unsafe-args is enabled.\n"
+            "          Secrets injected directly into command arguments WILL be visible\n"
+            "          to other users on this system via 'ps aux' or the process table.\n",
             file=sys.stderr,
         )
-        sys.exit(1)
 
+        # Update the parent environment temporarily so expandvars can access the new secrets.
+        os.environ.update(injected_env)
+
+        # Expand environment variables directly in the command arguments
+        final_command = [os.path.expandvars(arg) for arg in command]
+
+        # Check for unexpanded environment variables (e.g., $VAR or ${VAR})
+        unexpanded_pattern = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)|\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+        missing_vars = set()
+
+        for arg in final_command:
+            for match in unexpanded_pattern.findall(arg):
+                var_name = match[0] or match[1]
+                missing_vars.add(var_name)
+
+        if missing_vars:
+            missing_list = ", ".join(sorted(missing_vars))
+            print(
+                f"[-] Error: Command execution aborted.\n"
+                "    The following variables were not found in KeePass"
+                f": {missing_list}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+    else:
+        # Secure default: Do not touch arguments, just rely on environment injection.
+        final_command = command
     try:
-        result = subprocess.run(expanded_command, env=injected_env)
+        result = subprocess.run(final_command, env=injected_env)
         sys.exit(result.returncode)
 
     except FileNotFoundError:
         print(
-            f"[-] Error: Could not find command '{expanded_command[0]}'.",
+            f"[-] Error: Could not find command '{final_command[0]}'.",
             file=sys.stderr,
         )
         sys.exit(1)
