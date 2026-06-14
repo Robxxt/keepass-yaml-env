@@ -1,5 +1,7 @@
 # keepass-yaml-env
 
+***version: 0.2.0***
+
 [![CI](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml)
 [![Dependency Security Scan](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml)
 [![Publish to PyPI](https://github.com/robxxt/keepass-yaml-env/actions/workflows/publish.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/publish.yaml)
