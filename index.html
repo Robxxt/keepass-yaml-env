@@ -473,6 +473,14 @@
                     <td>CI/CD Ready</td>
                     <td>Easy to integrate into automated testing pipelines.</td>
                 </tr>
+                <tr>
+                    <td>Secure by Default</td>
+                    <td>Secrets are injected via environment variables only — never exposed as command arguments.</td>
+                </tr>
+                <tr>
+                    <td>Opt-In Unsafe Args</td>
+                    <td><code>--allow-unsafe-args</code> flag lets you expand <code>$VAR</code> in arguments when needed, with an explicit warning.</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -672,7 +680,11 @@ env_var: "API_KEY"</code></pre>
 <pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml -- docker compose up</code></pre>
 
         <h3>Print secrets to the terminal (for debugging)</h3>
-<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml -- env | grep DB_</code></pre>
+<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- env | grep DB_</code></pre>
+
+        <div class="callout-warn callout">
+            <p><strong>Note:</strong> Using <code>--allow-unsafe-args</code> flag will load the variables into the next process as arguments and therefore can be seen by other processes, which removes a layer of security and can compromise the credentials.</p>
+        </div>
     </div>
 
     <hr class="divider">
@@ -683,16 +695,11 @@ env_var: "API_KEY"</code></pre>
         <p>The <code>--</code> separator is <strong>required</strong> before the command you want to execute. It tells <code>keepass-yaml-env</code> to stop parsing its own arguments and treat everything after it as the target command.</p>
 
         <h3>Using <code>$</code> in shell commands</h3>
-        <p>When you reference environment variables in a <strong>shell command</strong> (e.g., <code>echo</code>, <code>env</code>), the shell will try to expand <code>$VAR</code> before the tool sees it. To prevent this, wrap the variable in single quotes (<code>'$'</code>) or escape it with a backslash (<code>\$</code>):</p>
+        <p>By default, <code>keepass-yaml-env</code> does <strong>not</strong> expand <code>$VAR</code> references in command arguments. They are passed through literally. To have the tool expand environment variables directly in your arguments, you must opt in with <code>--allow-unsafe-args</code>:</p>
 
-<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml -- echo '$DB_USER' '$DB_PASSWORD'</code></pre>
+<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- echo $DB_USER $DB_PASSWORD</code></pre>
 
-        <p>Or with escaped dollar signs:</p>
-<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml -- echo \$DB_USER \$DB_PASSWORD</code></pre>
-
-        <div class="callout-warn callout">
-            <p>Without quoting, the shell expands <code>$DB_USER</code> to an empty string before the tool runs, and the tool will abort with a "missing variable" error.</p>
-        </div>
+        <p>Without <code>--allow-unsafe-args</code>, <code>$DB_USER</code> is passed as the literal string <code>$DB_USER</code> to the command — it is <strong>not</strong> replaced with the secret value.</p>
 
         <h3>Using variables in scripts and Python files</h3>
         <p>When your command is a <strong>script or Python file</strong> (not a shell command), you do <strong>not</strong> need the <code>$</code> prefix. The tool expands variables internally and passes them to the child process as real environment variables:</p>
@@ -707,6 +714,28 @@ db_user = os.environ["DB_USER"]
 db_password = os.environ["DB_PASSWORD"]</code></pre>
 
         <p>No <code>$</code> or quoting is needed here — the variables are already set in the process environment.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ════════════ SECURITY ════════════ -->
+    <div class="section">
+        <h2><span class="emoji">&#128274;</span> Security: Environment Injection vs. Argument Expansion</h2>
+        <p>By default, <code>keepass-yaml-env</code> <strong>only injects secrets as environment variables</strong> into the child process. Secrets are never placed in command-line arguments, so they are invisible to other users via <code>ps aux</code> or <code>/proc/*/cmdline</code>.</p>
+
+        <p>If you need to expand <code>$VAR</code> placeholders directly in your command arguments (e.g., for tools that don't read environment variables), use the <code>--allow-unsafe-args</code> flag:</p>
+
+<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- echo $DB_USER $DB_PASSWORD</code></pre>
+
+        <div class="callout-warn callout">
+            <p><strong>Warning:</strong> When <code>--allow-unsafe-args</code> is enabled, expanded secret values become visible in the process table (<code>ps aux</code>). Only use this flag in trusted, single-user environments.</p>
+        </div>
+
+        <p>When <code>--allow-unsafe-args</code> is <strong>not</strong> set, any <code>$VAR</code> references in arguments are passed through literally (not expanded), and the tool relies entirely on environment variable injection:</p>
+
+<pre><span class="code-label">bash</span><code>keepass-yaml-env -f secrets.yaml -- python app.py</code></pre>
+
+        <p>This is the <strong>recommended</strong> approach for most use cases.</p>
     </div>
 
     <hr class="divider">

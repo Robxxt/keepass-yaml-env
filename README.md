@@ -21,6 +21,8 @@ Load KeePass secrets directly into your development environment at runtime — n
 | **In-Memory Injection** | Secrets are passed to the child process and destroyed on exit. |
 | **Path-Based Resolution** | Prevents collisions by fetching secrets via exact KeePass folder paths. |
 | **CI/CD Ready** | Easy to integrate into automated testing pipelines. |
+| **Secure by Default** | Secrets are injected via environment variables only — never exposed as command arguments. |
+| **Opt-In Unsafe Args** | `--allow-unsafe-args` flag lets you expand `$VAR` in arguments when needed, with an explicit warning. |
 
 ---
 
@@ -217,8 +219,10 @@ keepass-yaml-env -f secrets.yaml -- docker compose up
 ### Print secrets to the terminal (for debugging)
 
 ```bash
-keepass-yaml-env -f secrets.yaml -- env | grep DB_
+keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- env | grep DB_
 ```
+
+> **Note:** Using `--allow-unsafe-args` flag will load the variables into the next process as arguments and therefore can be seen by other processes, which removes a layer of security and can compromise the credentials.
 
 ---
 
@@ -228,19 +232,13 @@ The `--` separator is **required** before the command you want to execute. It te
 
 ### Using `$` in shell commands
 
-When you reference environment variables in a **shell command** (e.g., `echo`, `env`), the shell will try to expand `$VAR` before the tool sees it. To prevent this, wrap the variable in single quotes (`'$'`) or escape it with a backslash (`\$`):
+By default, `keepass-yaml-env` does **not** expand `$VAR` references in command arguments. They are passed through literally. To have the tool expand environment variables directly in your arguments, you must opt in with `--allow-unsafe-args`:
 
 ```bash
-keepass-yaml-env -f secrets.yaml -- echo '$DB_USER' '$DB_PASSWORD'
+keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- echo $DB_USER $DB_PASSWORD
 ```
 
-Or with escaped dollar signs:
-
-```bash
-keepass-yaml-env -f secrets.yaml -- echo \$DB_USER \$DB_PASSWORD
-```
-
-Without quoting, the shell expands `$DB_USER` to an empty string before the tool runs, and the tool will abort with a "missing variable" error.
+Without `--allow-unsafe-args`, `$DB_USER` is passed as the literal string `$DB_USER` to the command — it is **not** replaced with the secret value.
 
 ### Using variables in scripts and Python files
 
@@ -260,6 +258,30 @@ db_password = os.environ["DB_PASSWORD"]
 ```
 
 No `$` or quoting is needed here — the variables are already set in the process environment.
+
+---
+
+## Security: Environment Injection vs. Argument Expansion
+
+By default, `keepass-yaml-env` **only injects secrets as environment variables** into the child process. Secrets are never placed in command-line arguments, so they are invisible to other users via `ps aux` or `/proc/*/cmdline`.
+
+If you need to expand `$VAR` placeholders directly in your command arguments (e.g., for tools that don't read environment variables), use the `--allow-unsafe-args` flag:
+
+```bash
+keepass-yaml-env -f secrets.yaml --allow-unsafe-args -- echo $DB_USER $DB_PASSWORD
+```
+
+<div class="callout-warn callout">
+<p><strong>Warning:</strong> When <code>--allow-unsafe-args</code> is enabled, expanded secret values become visible in the process table (<code>ps aux</code>). Only use this flag in trusted, single-user environments.</p>
+</div>
+
+When `--allow-unsafe-args` is **not** set, any `$VAR` references in arguments are passed through literally (not expanded), and the tool relies entirely on environment variable injection:
+
+```bash
+keepass-yaml-env -f secrets.yaml -- python app.py
+```
+
+This is the **recommended** approach for most use cases.
 
 ---
 
