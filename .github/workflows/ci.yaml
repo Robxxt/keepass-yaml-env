@@ -36,6 +36,12 @@ jobs:
               run: |
                 poetry run ruff check . --line-length 120
 
-            
             - name: Run tests
               run: poetry run pytest -v
+            
+            - name: Run Bandit SAST
+              run: |
+                pipx install bandit
+                bandit -r keepass_yaml_env/ -ll
+
+    
