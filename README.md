@@ -1,6 +1,6 @@
 # keepass-yaml-env
 
-***version: 0.2.0***
+***version: 1.0.1***
 
 [![CI](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml)
 [![Dependency Security Scan](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml)
@@ -30,9 +30,8 @@ Load KeePass secrets directly into your development environment at runtime — n
 
 The recommended way to install `keepass-yaml-env` globally is using `pipx`. This installs the tool in an isolated environment but makes the command available everywhere on your system.
 
-<!-- later: pipx install keepass-yaml-env -->
 ```bash
-pipx install --pip-args="--index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/" keepass-yaml-env
+pipx install keepass-yaml-env
 ```
 
 <!-- Alternatively, you can use:
@@ -74,7 +73,7 @@ Database
 For nested entries inside groups, the path uses slashes:
 
 ```
-Database
+Root
  └── Development
        └── local_postgres
 ```
@@ -301,7 +300,7 @@ This prevents your application from running with undefined secrets.
 
 If you want to contribute to the project or run the test suite locally, we use modern Python tooling via `pyproject.toml`.
 
-1. Clone the repository.
+1. Clone the repository from [GitHub](https://github.com/Robxxt/keepass-yaml-env)
 2. Install dependencies using [Poetry](https://python-poetry.org/):
 
    ```bash
@@ -321,3 +320,5 @@ If you want to contribute to the project or run the test suite locally, we use m
    ```
 
 ---
+
+**Please Note that it might take me some time to review your suggestions**
