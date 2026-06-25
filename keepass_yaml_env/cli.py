@@ -35,8 +35,12 @@ class KeepassConfig(BaseModel):
 
     @field_validator("keepass_db")
     @classmethod
-    def check_keepass_db_exists(cls, v: Path) -> Path:
+    def check_keepass_db_exists(cls, v: Path, info) -> Path:
         """Fail fast if the database file doesn't exist before asking for passwords."""
+        config_dir = info.context.get("config_dir", Path.cwd()) if info.context else Path.cwd()
+        v = v.expanduser()
+        if not v.is_absolute():
+            v = config_dir / v
         if not v.is_file():
             raise ValueError(f"[-] Database file not found at: {v}")
         return v
@@ -48,6 +52,8 @@ def load_and_validate_config(filepath: str) -> KeepassConfig:
     if not config_path.is_file():
         print(f"- [Error]: Configuration file not found: {filepath}", file=sys.stderr)
         sys.exit(1)
+
+    config_dir = config_path.resolve().parent
 
     with open(config_path, "r") as file:
         try:
@@ -61,7 +67,7 @@ def load_and_validate_config(filepath: str) -> KeepassConfig:
         sys.exit(1)
 
     try:
-        return KeepassConfig(**raw_config)
+        return KeepassConfig.model_validate(raw_config, context={"config_dir": config_dir})
     except ValidationError as e:
         print("[-] Error: Configuration validation failed:", file=sys.stderr)
         for error in e.errors():
