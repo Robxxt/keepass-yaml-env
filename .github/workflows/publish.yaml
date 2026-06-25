@@ -2,6 +2,14 @@ name: Publish to PyPI
 run-name: "Published to PyPI by - Author: ${{ github.actor }}"
 
 on:
+  workflow_dispatch:
+    inputs:
+      publish_test:
+        description: "Is this publishing only a test to test.pypi.org?"
+        required: false
+        default: true
+        type: boolean
+
   release:
     types: [published]
 
@@ -35,9 +43,12 @@ jobs:
 
     #   [TEST PYPI DISTRIBUTION]
       - name: Publish package distributions to TestPyPI
+        if: ${{ inputs.publish_test }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+    
     #   [PUBLIC DISTRIBUTION]
-    #   - name: Publish package distributions to PyPI
-    #     uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish package distributions to PyPI
+        if: ${{ ! inputs.publish_test }}
+        uses: pypa/gh-action-pypi-publish@release/v1

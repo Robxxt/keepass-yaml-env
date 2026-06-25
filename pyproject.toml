@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "keepass-yaml-env"
-version = "0.3.0"
+version = "1.0.0"
 description = "Load KeePass secrets directly into your development environment at runtime—no plain-text .env files required."
 authors = ["robxxt <personal.robert@protonmail.com>"]
 readme = "README.md"
