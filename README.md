@@ -1,6 +1,6 @@
 # keepass-yaml-env
 
-***version: 1.0.1***
+***version: 1.0.2***
 
 [![CI](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/ci.yaml)
 [![Dependency Security Scan](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml/badge.svg)](https://github.com/robxxt/keepass-yaml-env/actions/workflows/dependency_security.yaml)
